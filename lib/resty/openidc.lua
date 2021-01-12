@@ -556,6 +556,8 @@ end
 local function openidc_discover(url, ssl_verify, keepalive, timeout, exptime, proxy_opts, http_request_decorator)
   log(DEBUG, "openidc_discover: URL is: " .. url)
 
+  log(DEBUG, " Openidc_Discover proxy opts:  " .. proxy_opts)
+
   local json, err
   local v = openidc_cache_get("discovery", url)
   if not v then
@@ -1473,6 +1475,7 @@ function openidc.authenticate(opts, target_url, unauth_action, session_opts)
       return nil, 'unauthorized request', target_url, session
     end
 
+    ngx.log(ngx.INFO, "------Before Ensuring Config -----", opts.proxy_opts)
     err = ensure_config(opts)
     if err then
       return nil, err, session.data.original_url, session
