@@ -556,7 +556,10 @@ end
 local function openidc_discover(url, ssl_verify, keepalive, timeout, exptime, proxy_opts, http_request_decorator)
   log(DEBUG, "openidc_discover: URL is: " .. url)
 
-  log(DEBUG, " Openidc_Discover proxy opts:  " .. proxy_opts)
+  log(DEBUG, " Openidc_Discover proxy opts:  "  )
+  for k,v in ipairs(proxy_opts) do
+    log(DEBUG, " Openidc_Discover proxy key/value:  " .. k .. v)
+  end
 
   local json, err
   local v = openidc_cache_get("discovery", url)
@@ -1475,7 +1478,11 @@ function openidc.authenticate(opts, target_url, unauth_action, session_opts)
       return nil, 'unauthorized request', target_url, session
     end
 
-    log(DEBUG, "------Before Ensuring Config -----" .. opts.proxy_opts)
+    log(DEBUG, "------Before Ensuring Config -----" )
+
+    for k,v in ipairs(opts.proxy_opts) do
+      log(DEBUG, " Before Ensuring Config key/value:  " .. k .. v)
+    end
 
     err = ensure_config(opts)
     if err then
