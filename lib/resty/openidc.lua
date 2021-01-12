@@ -510,6 +510,9 @@ function openidc.call_token_endpoint(opts, endpoint, body, auth, endpoint_name, 
 
   local httpc = http.new()
   openidc_configure_timeouts(httpc, opts.timeout)
+
+  ngx.log(ngx.INFO, "-----Proxy Opts----", opts.proxy_opts)
+
   openidc_configure_proxy(httpc, opts.proxy_opts)
   local res, err = httpc:request_uri(endpoint, decorate_request(opts.http_request_decorator, {
     method = "POST",
