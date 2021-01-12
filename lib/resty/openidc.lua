@@ -553,19 +553,9 @@ local function openidc_load_jwt_none_alg(enc_hdr, enc_payload)
 end
 
 -- get the Discovery metadata from the specified URL
-local function openidc_discover(url, ssl_verify, keepalive, timeout, exptime, opt_proxy_opts, http_request_decorator,opt_http_proxy,opt_https_proxy)
+local function openidc_discover(url, ssl_verify, keepalive, timeout, exptime, proxy_opts, http_request_decorator)
   log(DEBUG, "openidc_discover: URL is: " .. url)
-  log(DEBUG, "   --- openidc_discover HTTP Proxy URL: " .. opt_http_proxy )  
-
-
-  local proxy_opts = {
-    http_proxy = opt_http_proxy,
-    https_proxy = opt_https_proxy
-  }
-
-
-  log(DEBUG, "   --- openidc_discover HTTP Proxy URL: " .. proxy_opts.http_proxy )
-
+  
   local json, err
   local v = openidc_cache_get("discovery", url)
   if not v then
@@ -605,9 +595,8 @@ local function openidc_ensure_discovered_data(opts)
   local err
   if type(opts.discovery) == "string" then
     local discovery
-    log(DEBUG, "   --- openidc_ensure_discovered_data HTTP Proxy URL: " .. opts.http_proxy )
     discovery, err = openidc_discover(opts.discovery, opts.ssl_verify, opts.keepalive, opts.timeout, opts.jwk_expires_in, opts.proxy_opts,
-                                      opts.http_request_decorator,opts.http_proxy,opts.https_proxy)
+                                      opts.http_request_decorator)
     if not err then
       opts.discovery = discovery
     end
@@ -1399,8 +1388,6 @@ end
 -- main routine for OpenID Connect user authentication
 function openidc.authenticate(opts, target_url, unauth_action, session_opts)
 
-  log(DEBUG, "   --- openidc.authenticate HTTP Proxy URL: " .. opts.http_proxy )
-
   if opts.redirect_uri_path then
     log(WARN, "using deprecated option `opts.redirect_uri_path`; switch to using an absolute URI and `opts.redirect_uri` instead")
   end
@@ -1485,6 +1472,8 @@ function openidc.authenticate(opts, target_url, unauth_action, session_opts)
     if unauth_action == 'deny' then
       return nil, 'unauthorized request', target_url, session
     end
+
+    log(DEBUG, "------Before Ensuring Config -----" .. opts.proxy_opts)
 
     err = ensure_config(opts)
     if err then
