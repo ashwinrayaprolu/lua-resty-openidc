@@ -1475,7 +1475,8 @@ function openidc.authenticate(opts, target_url, unauth_action, session_opts)
       return nil, 'unauthorized request', target_url, session
     end
 
-    ngx.log(ngx.INFO, "------Before Ensuring Config -----", opts.proxy_opts)
+    log(DEBUG, "------Before Ensuring Config -----" .. opts.proxy_opts)
+
     err = ensure_config(opts)
     if err then
       return nil, err, session.data.original_url, session
