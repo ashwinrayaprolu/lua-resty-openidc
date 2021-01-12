@@ -553,13 +553,13 @@ local function openidc_load_jwt_none_alg(enc_hdr, enc_payload)
 end
 
 -- get the Discovery metadata from the specified URL
-local function openidc_discover(url, ssl_verify, keepalive, timeout, exptime, proxy_opts, http_request_decorator)
+local function openidc_discover(url, ssl_verify, keepalive, timeout, exptime, opt_proxy_opts, http_request_decorator,opt_http_proxy,opt_https_proxy)
   log(DEBUG, "openidc_discover: URL is: " .. url)
-
-  log(DEBUG, " Openidc_Discover proxy opts:  "  )
-  for k,v in ipairs(proxy_opts) do
-    log(DEBUG, " Openidc_Discover proxy key/value:  " .. k .. v)
-  end
+    
+  local proxy_opts = {
+    http_proxy = opt_http_proxy,
+    https_proxy = opt_https_proxy
+  }
 
   local json, err
   local v = openidc_cache_get("discovery", url)
@@ -601,7 +601,7 @@ local function openidc_ensure_discovered_data(opts)
   if type(opts.discovery) == "string" then
     local discovery
     discovery, err = openidc_discover(opts.discovery, opts.ssl_verify, opts.keepalive, opts.timeout, opts.jwk_expires_in, opts.proxy_opts,
-                                      opts.http_request_decorator)
+                                      opts.http_request_decorator,opts.http_proxy,opt.https_proxy)
     if not err then
       opts.discovery = discovery
     end
@@ -1393,14 +1393,6 @@ end
 -- main routine for OpenID Connect user authentication
 function openidc.authenticate(opts, target_url, unauth_action, session_opts)
 
-
-  log(DEBUG, " ------Authenticate: print proxy opts ")
-  for k,v in ipairs(opts.proxy_opts) do
-    log(DEBUG, " Authenticate:  " .. k .. v)
-  end
-  log(DEBUG, " ------Authenticate: END print proxy opts ")
-
-
   if opts.redirect_uri_path then
     log(WARN, "using deprecated option `opts.redirect_uri_path`; switch to using an absolute URI and `opts.redirect_uri` instead")
   end
@@ -1484,12 +1476,6 @@ function openidc.authenticate(opts, target_url, unauth_action, session_opts)
     end
     if unauth_action == 'deny' then
       return nil, 'unauthorized request', target_url, session
-    end
-
-    log(DEBUG, "------Before Ensuring Config -----" )
-
-    for k,v in ipairs(opts.proxy_opts) do
-      log(DEBUG, " Before Ensuring Config key/value:  " .. k .. v)
     end
 
     err = ensure_config(opts)
