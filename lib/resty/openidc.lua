@@ -555,11 +555,16 @@ end
 -- get the Discovery metadata from the specified URL
 local function openidc_discover(url, ssl_verify, keepalive, timeout, exptime, opt_proxy_opts, http_request_decorator,opt_http_proxy,opt_https_proxy)
   log(DEBUG, "openidc_discover: URL is: " .. url)
-    
+  log(DEBUG, "   --- openidc_discover HTTP Proxy URL: " .. opt_http_proxy )  
+
+
   local proxy_opts = {
     http_proxy = opt_http_proxy,
     https_proxy = opt_https_proxy
   }
+
+
+  log(DEBUG, "   --- openidc_discover HTTP Proxy URL: " .. proxy_opts.http_proxy )
 
   local json, err
   local v = openidc_cache_get("discovery", url)
@@ -600,6 +605,7 @@ local function openidc_ensure_discovered_data(opts)
   local err
   if type(opts.discovery) == "string" then
     local discovery
+    log(DEBUG, "   --- openidc_ensure_discovered_data HTTP Proxy URL: " .. opts.http_proxy )
     discovery, err = openidc_discover(opts.discovery, opts.ssl_verify, opts.keepalive, opts.timeout, opts.jwk_expires_in, opts.proxy_opts,
                                       opts.http_request_decorator,opts.http_proxy,opts.https_proxy)
     if not err then
