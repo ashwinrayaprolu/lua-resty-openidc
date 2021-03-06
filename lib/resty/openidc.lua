@@ -406,7 +406,7 @@ local function openidc_parse_json_response(response, ignore_body_on_success)
     end
   end
 
-  log(DEBUG, "-------------Userinfo----------" .. res.sub)
+  log(DEBUG, "-------------Userinfo----------" .. tostring(res))
   
   
   return res, err
