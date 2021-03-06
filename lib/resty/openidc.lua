@@ -1164,6 +1164,11 @@ local function openidc_authorization_response(opts, session)
 
     if err then
       log(ERROR, "error calling userinfo endpoint: " .. err)
+      if store_in_session(opts, 'user_body') then
+        session.data.user_body = user_body
+
+        log(DEBUG,user_body)
+      end
     elseif user then
       if id_token.sub ~= user.sub then
         err = "\"sub\" claim in id_token (\"" .. (id_token.sub or "null") .. "\") is not equal to the \"sub\" claim returned from the userinfo endpoint (\"" .. (user.sub or "null") .. "\")"
@@ -1171,11 +1176,6 @@ local function openidc_authorization_response(opts, session)
       else
         session.data.user = user
 
-        if store_in_session(opts, 'user_body') then
-          session.data.user_body = user_body
-        end
-
-        log(DEBUG,user_body)
       end
 
       
