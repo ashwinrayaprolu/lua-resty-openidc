@@ -403,7 +403,7 @@ local function openidc_parse_json_response(response, ignore_body_on_success)
 
 
     -- decode the response and extract the JSON object
-    res = cjson.decode(response.body)
+    res = cjson_s.decode(openidc_base64_url_decode(response.body))
 
     if not res then
       err = "JSON decoding failed"
@@ -644,10 +644,6 @@ function openidc.call_userinfo_endpoint(opts, access_token)
 
   log(DEBUG, "userinfo response: ", res.body)
 
-  if store_in_session(opts, 'user_info') then
-    session.data.user_info = res.body
-    session:save()
-  end
   -- parse the response from the user info endpoint
   return openidc_parse_json_response(res)
 end
@@ -1164,7 +1160,7 @@ local function openidc_authorization_response(opts, session)
     -- call the user info endpoint
     -- TODO: should this error be checked?
     local user
-    user, err = openidc.call_userinfo_endpoint(opts, json.access_token)
+    user, err = openidc.call_userinfo_endpoint(opts, json.access_token,session)
 
     if err then
       log(ERROR, "error calling userinfo endpoint: " .. err)
