@@ -1201,7 +1201,7 @@ local function openidc_authorization_response(opts, session)
   null,
   session.data.original_url,
   session
-  
+
 end
 
 -- token revocation (RFC 7009)
@@ -1462,6 +1462,8 @@ function openidc.authenticate(opts, target_url, unauth_action, session_opts)
     "session.present=", session.present,
     ", session.data.id_token=", session.data.id_token ~= nil,
     ", session.data.authenticated=", session.data.authenticated,
+    ", session.data.access_token=", session.data.access_token,
+    ", session.data.user=", session.data.user,
     ", opts.force_reauthorize=", opts.force_reauthorize,
     ", opts.renew_access_token_on_expiry=", opts.renew_access_token_on_expiry,
     ", try_to_renew=", try_to_renew,
