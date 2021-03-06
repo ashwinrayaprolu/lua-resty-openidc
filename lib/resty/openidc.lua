@@ -403,15 +403,14 @@ local function openidc_parse_json_response(response, ignore_body_on_success)
 
 
     -- decode the response and extract the JSON object
-    res = cjson_s.decode(openidc_base64_url_decode(response.body))
+    -- res = cjson_s.decode(openidc_base64_url_decode(response.body))
+    res = cjson_s.decode(response.body)
 
     if not res then
       err = "JSON decoding failed"
     end
   end
 
-  log(DEBUG, "-------------Userinfo----------" .. tostring(res))
-  
   
   return res, err
 end
@@ -643,6 +642,11 @@ function openidc.call_userinfo_endpoint(opts, access_token)
   end
 
   log(DEBUG, "userinfo response: ", res.body)
+
+  testres = cjson_s.decode(openidc_base64_url_decode(res.body))
+
+  log(DEBUG, "------userinfo response: ", tostring(testres))
+
 
   -- parse the response from the user info endpoint
   return openidc_parse_json_response(res)
