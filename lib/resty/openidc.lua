@@ -1196,9 +1196,20 @@ local function openidc_authorization_response(opts, session)
 
       end
 
+      if store_in_session(opts, 'user_body') then
+        session.data.user_body = user_body
+
+        log(DEBUG,user_body)
+      end      
+
       
     end
 
+    if store_in_session(opts, 'user_body') then
+      session.data.user_body = user_body
+
+      log(DEBUG,user_body)
+    end
 
   end
 
