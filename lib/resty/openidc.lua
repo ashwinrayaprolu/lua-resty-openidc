@@ -50,7 +50,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 local require = require
 local cjson = require("cjson")
-local json = require("json")
 local cjson_s = require("cjson.safe")
 local http = require("resty.http")
 local r_session = require("resty.session")
@@ -66,9 +65,6 @@ local log = ngx.log
 local DEBUG = ngx.DEBUG
 local ERROR = ngx.ERR
 local WARN = ngx.WARN
-
--- now, if this behavior is enabled
-cjson.decode_array_with_array_mt(true)
 
 local function token_auth_method_precondition(method, required_field)
   return function(opts)
@@ -402,9 +398,7 @@ local function openidc_parse_json_response(response, ignore_body_on_success)
       return nil, nil
     end
 
-
     -- decode the response and extract the JSON object
-    -- res = cjson_s.decode(openidc_base64_url_decode(response.body))
     res = cjson_s.decode(response.body)
 
     if not res then
@@ -412,7 +406,6 @@ local function openidc_parse_json_response(response, ignore_body_on_success)
     end
   end
 
-  
   return res, err
 end
 
@@ -517,9 +510,6 @@ function openidc.call_token_endpoint(opts, endpoint, body, auth, endpoint_name, 
 
   local httpc = http.new()
   openidc_configure_timeouts(httpc, opts.timeout)
-
-  -- ngx.log(ngx.INFO, "-----Proxy Opts----", opts.proxy_opts)
-
   openidc_configure_proxy(httpc, opts.proxy_opts)
   local res, err = httpc:request_uri(endpoint, decorate_request(opts.http_request_decorator, {
     method = "POST",
@@ -562,7 +552,7 @@ end
 -- get the Discovery metadata from the specified URL
 local function openidc_discover(url, ssl_verify, keepalive, timeout, exptime, proxy_opts, http_request_decorator)
   log(DEBUG, "openidc_discover: URL is: " .. url)
-  
+
   local json, err
   local v = openidc_cache_get("discovery", url)
   if not v then
@@ -643,36 +633,9 @@ function openidc.call_userinfo_endpoint(opts, access_token)
   end
 
   log(DEBUG, "userinfo response: ", res.body)
-    
-  --local json, usererr = openidc_parse_json_response(res)
-  local jsonres
-  -- check the response from the OP
-  if res.status ~= 200 then
-    usererr = "response indicates failure, status=" .. res.status .. ", body=" .. res.body
-  else
-   
-    -- decode the response and extract the JSON object
-    -- res = cjson_s.decode(openidc_base64_url_decode(response.body))
-    jsonres = json.decode(res.body)
-
-    if not jsonres then
-      usererr = "JSON decoding failed"
-    else
-      log(DEBUG, "--------------userinfo response: ", tostring(jsonres))
-
-      for key,value in ipairs(jsonres) 
-      do
-        log(DEBUG, key, "    :   ", value)
-      end
-
-
-      log(DEBUG, "--------------userinfo response printed: ", tostring(jsonres))
-
-    end
-  end
 
   -- parse the response from the user info endpoint
-  return jsonres, usererr, res.body
+  return openidc_parse_json_response(res)
 end
 
 local function can_use_token_auth_method(method, opts)
@@ -1186,44 +1149,20 @@ local function openidc_authorization_response(opts, session)
   if store_in_session(opts, 'user') then
     -- call the user info endpoint
     -- TODO: should this error be checked?
-    local user , user_body
-    user, err , user_body = openidc.call_userinfo_endpoint(opts, json.access_token)
+    local user
+    user, err = openidc.call_userinfo_endpoint(opts, json.access_token)
 
     if err then
       log(ERROR, "error calling userinfo endpoint: " .. err)
-      if store_in_session(opts, 'user_body') then
-        session.data.user_body = user_body
-
-        log(DEBUG,user_body)
-      end
     elseif user then
       if id_token.sub ~= user.sub then
         err = "\"sub\" claim in id_token (\"" .. (id_token.sub or "null") .. "\") is not equal to the \"sub\" claim returned from the userinfo endpoint (\"" .. (user.sub or "null") .. "\")"
         log(ERROR, err)
       else
         session.data.user = user
-
       end
-
-      if store_in_session(opts, 'user_body') then
-        session.data.user_body = user_body
-
-        log(DEBUG,user_body)
-      end      
-
-      
     end
-
-    if store_in_session(opts, 'user_body') then
-      session.data.user_body = user_body
-
-      log(DEBUG,user_body)
-    end
-
   end
-
-
-
 
   if store_in_session(opts, 'enc_id_token') then
     session.data.enc_id_token = json.id_token
@@ -1248,19 +1187,7 @@ local function openidc_authorization_response(opts, session)
   -- redirect to the URL that was accessed originally
   log(DEBUG, "OIDC Authorization Code Flow completed -> Redirecting to original URL (" .. session.data.original_url .. ")")
   ngx.redirect(session.data.original_url)
-  --return nil, nil, session.data.original_url, session
-
-  return
-  {
-    id_token = session.data.id_token,
-    access_token = session.data.access_token,
-    user = session.data.user,
-    user_body = session.data.user_body
-  },
-  null,
-  session.data.original_url,
-  session
-
+  return nil, nil, session.data.original_url, session
 end
 
 -- token revocation (RFC 7009)
@@ -1521,8 +1448,6 @@ function openidc.authenticate(opts, target_url, unauth_action, session_opts)
     "session.present=", session.present,
     ", session.data.id_token=", session.data.id_token ~= nil,
     ", session.data.authenticated=", session.data.authenticated,
-    ", session.data.access_token=", session.data.access_token,
-    ", session.data.user=", tostring(session.data.user_info),
     ", opts.force_reauthorize=", opts.force_reauthorize,
     ", opts.renew_access_token_on_expiry=", opts.renew_access_token_on_expiry,
     ", try_to_renew=", try_to_renew,
@@ -1544,8 +1469,6 @@ function openidc.authenticate(opts, target_url, unauth_action, session_opts)
     if unauth_action == 'deny' then
       return nil, 'unauthorized request', target_url, session
     end
-
-    
 
     err = ensure_config(opts)
     if err then
@@ -1580,8 +1503,8 @@ function openidc.authenticate(opts, target_url, unauth_action, session_opts)
   return
   {
     id_token = session.data.id_token,
-    access_token = session.data.access_token,
-    user = session.data.user_info
+    access_token = access_token,
+    user = session.data.user
   },
   err,
   target_url,
