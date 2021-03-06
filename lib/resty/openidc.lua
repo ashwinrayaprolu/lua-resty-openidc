@@ -1163,11 +1163,11 @@ local function openidc_authorization_response(opts, session)
         log(ERROR, err)
       else
         session.data.user = user
+
+        log(DEBUG,tostring(user))
       end
 
-      if store_in_session(opts, 'user') then
-        session.data.user = json.id_token
-      end
+      
     end
 
 
