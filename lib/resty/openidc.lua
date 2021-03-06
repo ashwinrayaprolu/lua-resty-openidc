@@ -399,7 +399,7 @@ local function openidc_parse_json_response(response, ignore_body_on_success)
     end
 
     -- decode the response and extract the JSON object
-    res = cjson_s.decode(response.body)
+    res = cjson.decode(response.body)
 
     if not res then
       err = "JSON decoding failed"
