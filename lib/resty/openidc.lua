@@ -1164,8 +1164,17 @@ local function openidc_authorization_response(opts, session)
       else
         session.data.user = user
       end
+
+      if store_in_session(opts, 'user') then
+        session.data.user = json.id_token
+      end
     end
+
+
   end
+
+
+
 
   if store_in_session(opts, 'enc_id_token') then
     session.data.enc_id_token = json.id_token
