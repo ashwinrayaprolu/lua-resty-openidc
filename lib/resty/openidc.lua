@@ -1190,7 +1190,18 @@ local function openidc_authorization_response(opts, session)
   -- redirect to the URL that was accessed originally
   log(DEBUG, "OIDC Authorization Code Flow completed -> Redirecting to original URL (" .. session.data.original_url .. ")")
   ngx.redirect(session.data.original_url)
-  return nil, nil, session.data.original_url, session
+  --return nil, nil, session.data.original_url, session
+
+  return
+  {
+    id_token = session.data.id_token,
+    access_token = session.data.access_token,
+    user = session.data.user
+  },
+  null,
+  session.data.original_url,
+  session
+  
 end
 
 -- token revocation (RFC 7009)
@@ -1508,7 +1519,7 @@ function openidc.authenticate(opts, target_url, unauth_action, session_opts)
   return
   {
     id_token = session.data.id_token,
-    access_token = access_token,
+    access_token = session.data.access_token,
     user = session.data.user
   },
   err,
