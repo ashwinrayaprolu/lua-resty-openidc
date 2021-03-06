@@ -645,7 +645,7 @@ function openidc.call_userinfo_endpoint(opts, access_token)
   log(DEBUG, "userinfo response: ", res.body)
     
   --local json, usererr = openidc_parse_json_response(res)
-  local json
+  local jsonres
   -- check the response from the OP
   if res.status ~= 200 then
     usererr = "response indicates failure, status=" .. res.status .. ", body=" .. res.body
@@ -653,15 +653,15 @@ function openidc.call_userinfo_endpoint(opts, access_token)
    
     -- decode the response and extract the JSON object
     -- res = cjson_s.decode(openidc_base64_url_decode(response.body))
-    json = json.decode(res.body)
+    jsonres = json.decode(res.body)
 
-    if not json then
+    if not jsonres then
       usererr = "JSON decoding failed"
     end
   end
 
   -- parse the response from the user info endpoint
-  return json, usererr, res.body
+  return jsonres, usererr, res.body
 end
 
 local function can_use_token_auth_method(method, opts)
