@@ -657,6 +657,8 @@ function openidc.call_userinfo_endpoint(opts, access_token)
 
     if not jsonres then
       usererr = "JSON decoding failed"
+    else
+      log(DEBUG, "--------------userinfo response: ", tostring(jsonres))
     end
   end
 
