@@ -643,13 +643,9 @@ function openidc.call_userinfo_endpoint(opts, access_token)
 
   log(DEBUG, "userinfo response: ", res.body)
 
-  testres = cjson_s.decode(openidc_base64_url_decode(res.body))
-
-  log(DEBUG, "------userinfo response: ", tostring(testres))
-
 
   -- parse the response from the user info endpoint
-  return openidc_parse_json_response(res)
+  return openidc_parse_json_response(res),res.body
 end
 
 local function can_use_token_auth_method(method, opts)
@@ -1163,8 +1159,8 @@ local function openidc_authorization_response(opts, session)
   if store_in_session(opts, 'user') then
     -- call the user info endpoint
     -- TODO: should this error be checked?
-    local user
-    user, err = openidc.call_userinfo_endpoint(opts, json.access_token,session)
+    local user , user_body
+    user, err , user_body = openidc.call_userinfo_endpoint(opts, json.access_token,session)
 
     if err then
       log(ERROR, "error calling userinfo endpoint: " .. err)
@@ -1175,7 +1171,11 @@ local function openidc_authorization_response(opts, session)
       else
         session.data.user = user
 
-        log(DEBUG,tostring(user))
+        if store_in_session(opts, 'user_body') then
+          session.data.user_body = user_body
+        end
+
+        log(DEBUG,user_body)
       end
 
       
