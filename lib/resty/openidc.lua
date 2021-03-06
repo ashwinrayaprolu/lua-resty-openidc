@@ -645,7 +645,7 @@ function openidc.call_userinfo_endpoint(opts, access_token)
   log(DEBUG, "userinfo response: ", res.body)
     
   --local json, usererr = openidc_parse_json_response(res)
-  local json = nil
+  local json
   -- check the response from the OP
   if res.status ~= 200 then
     usererr = "response indicates failure, status=" .. res.status .. ", body=" .. res.body
