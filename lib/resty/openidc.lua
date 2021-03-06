@@ -50,6 +50,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 local require = require
 local cjson = require("cjson")
+local json = require("json")
 local cjson_s = require("cjson.safe")
 local http = require("resty.http")
 local r_session = require("resty.session")
@@ -642,10 +643,25 @@ function openidc.call_userinfo_endpoint(opts, access_token)
   end
 
   log(DEBUG, "userinfo response: ", res.body)
+    
+  --local json, usererr = openidc_parse_json_response(res)
+  local json = nil
+  -- check the response from the OP
+  if res.status ~= 200 then
+    usererr = "response indicates failure, status=" .. res.status .. ", body=" .. res.body
+  else
+   
+    -- decode the response and extract the JSON object
+    -- res = cjson_s.decode(openidc_base64_url_decode(response.body))
+    json = json.decode(res.body)
 
+    if not json then
+      usererr = "JSON decoding failed"
+    end
+  end
 
   -- parse the response from the user info endpoint
-  return openidc_parse_json_response(res),res.body
+  return json, usererr, res.body
 end
 
 local function can_use_token_auth_method(method, opts)
@@ -1160,7 +1176,7 @@ local function openidc_authorization_response(opts, session)
     -- call the user info endpoint
     -- TODO: should this error be checked?
     local user , user_body
-    user, err , user_body = openidc.call_userinfo_endpoint(opts, json.access_token,session)
+    user, err , user_body = openidc.call_userinfo_endpoint(opts, json.access_token)
 
     if err then
       log(ERROR, "error calling userinfo endpoint: " .. err)
