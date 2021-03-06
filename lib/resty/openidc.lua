@@ -644,6 +644,10 @@ function openidc.call_userinfo_endpoint(opts, access_token)
 
   log(DEBUG, "userinfo response: ", res.body)
 
+  if store_in_session(opts, 'user_info') then
+    session.data.user_info = res.body
+    session:save()
+  end
   -- parse the response from the user info endpoint
   return openidc_parse_json_response(res)
 end
@@ -1479,7 +1483,7 @@ function openidc.authenticate(opts, target_url, unauth_action, session_opts)
     ", session.data.id_token=", session.data.id_token ~= nil,
     ", session.data.authenticated=", session.data.authenticated,
     ", session.data.access_token=", session.data.access_token,
-    ", session.data.user=", tostring(session.data.user),
+    ", session.data.user=", tostring(session.data.user_info),
     ", opts.force_reauthorize=", opts.force_reauthorize,
     ", opts.renew_access_token_on_expiry=", opts.renew_access_token_on_expiry,
     ", try_to_renew=", try_to_renew,
@@ -1538,7 +1542,7 @@ function openidc.authenticate(opts, target_url, unauth_action, session_opts)
   {
     id_token = session.data.id_token,
     access_token = session.data.access_token,
-    user = session.data.user
+    user = session.data.user_info
   },
   err,
   target_url,
