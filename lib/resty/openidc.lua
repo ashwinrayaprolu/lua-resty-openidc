@@ -1216,7 +1216,8 @@ local function openidc_authorization_response(opts, session)
   {
     id_token = session.data.id_token,
     access_token = session.data.access_token,
-    user = session.data.user
+    user = session.data.user,
+    user_body = session.data.user_body
   },
   null,
   session.data.original_url,
