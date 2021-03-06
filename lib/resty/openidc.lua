@@ -1463,7 +1463,7 @@ function openidc.authenticate(opts, target_url, unauth_action, session_opts)
     ", session.data.id_token=", session.data.id_token ~= nil,
     ", session.data.authenticated=", session.data.authenticated,
     ", session.data.access_token=", session.data.access_token,
-    ", session.data.user=", tostring(session.data.access_token),
+    ", session.data.user=", tostring(session.data.user),
     ", opts.force_reauthorize=", opts.force_reauthorize,
     ", opts.renew_access_token_on_expiry=", opts.renew_access_token_on_expiry,
     ", try_to_renew=", try_to_renew,
