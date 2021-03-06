@@ -66,6 +66,9 @@ local DEBUG = ngx.DEBUG
 local ERROR = ngx.ERR
 local WARN = ngx.WARN
 
+-- now, if this behavior is enabled
+cjson.decode_array_with_array_mt(true)
+
 local function token_auth_method_precondition(method, required_field)
   return function(opts)
     if not opts[required_field] then
@@ -397,6 +400,7 @@ local function openidc_parse_json_response(response, ignore_body_on_success)
     if ignore_body_on_success then
       return nil, nil
     end
+
 
     -- decode the response and extract the JSON object
     res = cjson.decode(response.body)
